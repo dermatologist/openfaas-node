@@ -8,6 +8,7 @@ const express = require('express')
 const app = express()
 const handler = require('./function/handler');
 const bodyParser = require('body-parser')
+const fs = require('fs');
 
 const defaultMaxSize = '100kb' // body-parser default
 
@@ -17,7 +18,7 @@ const rawLimit = process.env.MAX_RAW_SIZE || defaultMaxSize
 const jsonLimit = process.env.MAX_JSON_SIZE || defaultMaxSize
 
 app.use(function addDefaultContentType(req, res, next) {
-    // When no content-type is given, the body element is set to 
+    // When no content-type is given, the body element is set to
     // nil, and has been a source of contention for new users.
 
     if(!req.headers['content-type']) {
@@ -75,7 +76,7 @@ class FunctionContext {
         }
 
         this.headerValues = value;
-        return this;    
+        return this;
     }
 
     succeed(value) {
@@ -137,8 +138,22 @@ app.options('/*', middleware);
 
 const port = process.env.http_port || 3000;
 
-app.listen(port, () => {
-    console.log(`node17 listening on port: ${port}`)
-});
-
+// If called directly, like "node index.js", start the server
+// If called from cli, write to file
+if(length(process.argv) > 2) {
+    Promise.resolve(handler(process.argv[2], null, null)).then(res => {
+        fs.writeFile(process.argv[3], res, err => {
+            if (err) {
+                console.error(err);
+            }
+            // file written successfully
+        });
+    }).catch(e => {
+        console.error(e);
+    });
+} else {
+    app.listen(port, () => {
+        console.log(`node17 listening on port: ${port}`)
+    });
+}
 
