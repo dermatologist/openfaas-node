@@ -141,16 +141,20 @@ const port = process.env.http_port || 3000;
 // If called directly, like "node index.js", start the server
 // If called from cli, write to file
 if(length(process.argv) > 2) {
-    Promise.resolve(handler(process.argv[2], null, null)).then(res => {
-        fs.writeFile(process.argv[3], res, err => {
-            if (err) {
-                console.error(err);
-            }
-            // file written successfully
+    // Use fs.readFile() method to read the file
+    fs.readFile(process.argv[2], 'utf8', function (err, data) {
+        Promise.resolve(handler(data, null, null)).then(res => {
+            fs.writeFile(process.argv[3], res, err => {
+                if (err) {
+                    console.error(err);
+                }
+                // file written successfully
+            });
+        }).catch(e => {
+            console.error(e);
         });
-    }).catch(e => {
-        console.error(e);
     });
+
 } else {
     app.listen(port, () => {
         console.log(`node17 listening on port: ${port}`)
